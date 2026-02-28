@@ -15,7 +15,13 @@ class ReaderScreen extends StatefulWidget {
 }
 
 class _ReaderScreenState extends State<ReaderScreen> {
-  late Future<List<NodeModel>> futureNodes;
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<NodeModel> allNodes = [];
+  Map<String?, List<NodeModel>> childrenByParent = {};
+  List<NodeModel> activePath = [];
+  Map<String?, int> selectedSiblingIndex = {};
+
   final TextEditingController _branchController = TextEditingController();
   bool isSubmitting = false;
   String? selectedParentId; // To track which node we are branching from
@@ -33,17 +39,57 @@ class _ReaderScreenState extends State<ReaderScreen> {
     super.dispose();
   }
 
-  void _loadNodes() {
-    setState(() {
-      futureNodes = fetchStoryNodes(widget.story.id).then((nodes) {
-        // Automatically default branch off the last node when first loading
-        if (nodes.isNotEmpty && selectedParentId == null) {
-          selectedParentId = nodes.last.id;
-          selectedParentAuthor = nodes.last.authorName;
-        }
-        return nodes;
+  void _loadNodes() async {
+    setState(() { _isLoading = true; _errorMessage = null; });
+    try {
+      final nodes = await fetchStoryNodes(widget.story.id);
+      
+      childrenByParent.clear();
+      for (var node in nodes) {
+        childrenByParent.putIfAbsent(node.parentId, () => []).add(node);
+      }
+      
+      // Sort to default Canon path
+      for (var siblings in childrenByParent.values) {
+        siblings.sort((a, b) => b.voteCount.compareTo(a.voteCount));
+      }
+
+      allNodes = nodes;
+
+      setState(() {
+        _computeActivePath();
+        _isLoading = false;
       });
-    });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _computeActivePath() {
+    activePath.clear();
+    String? currentParentId;
+
+    while (true) {
+      if (!childrenByParent.containsKey(currentParentId) || childrenByParent[currentParentId]!.isEmpty) {
+        break;
+      }
+      List<NodeModel> siblings = childrenByParent[currentParentId]!;
+      int selectedIndex = selectedSiblingIndex[currentParentId] ?? 0;
+
+      if (selectedIndex >= siblings.length) selectedIndex = 0;
+
+      NodeModel activeNode = siblings[selectedIndex];
+      activePath.add(activeNode);
+      currentParentId = activeNode.id;
+    }
+
+    if (activePath.isNotEmpty) {
+      selectedParentId = activePath.last.id;
+      selectedParentAuthor = activePath.last.authorName;
+    }
   }
 
   Future<List<NodeModel>> fetchStoryNodes(String storyId) async {
@@ -74,14 +120,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
       if (response.statusCode == 200) {
         // Find node locally and optimistically update vote count without a full reload
         setState(() {
-          futureNodes = futureNodes.then((nodes) {
-            final idx = nodes.indexWhere((n) => n.id == nodeId);
-            if (idx != -1) {
-              // Creating a cheap local increment copy for UI feel
-              // Usually we'd use a provider/cubit here
-            }
-            return nodes;
-          });
+          final idx = allNodes.indexWhere((n) => n.id == nodeId);
+          if (idx != -1) {
+            allNodes[idx].voteCount += 1;
+          }
         });
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -147,27 +189,25 @@ class _ReaderScreenState extends State<ReaderScreen> {
           style: const TextStyle(color: AppTheme.textLight, fontSize: 18),
         ),
       ),
-      body: FutureBuilder<List<NodeModel>>(
-        future: futureNodes,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: AppTheme.cyanAccent));
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: AppTheme.magentaAccent)));
-          }
-
-          final nodes = snapshot.data ?? [];
-
-          return CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final node = nodes[index];
-                      // Simple linear timeline rendering for MVP (Pre-Order Graph view)
-                      return Container(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppTheme.cyanAccent))
+          : _errorMessage != null
+              ? Center(child: Text('Error: $_errorMessage', style: const TextStyle(color: AppTheme.magentaAccent)))
+              : CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final node = activePath[index];
+                            final mapKey = node.parentId;
+                            final siblings = childrenByParent[mapKey] ?? [];
+                            final siblingCount = siblings.length;
+                            final currentIndex = selectedSiblingIndex[mapKey] ?? 0;
+                            
+                            // Simple linear timeline rendering for MVP (Pre-Order Graph view)
+                            return Container(
                         margin: const EdgeInsets.only(bottom: 24),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,9 +220,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                   backgroundImage: NetworkImage(node.authorAvatarUrl),
                                   backgroundColor: AppTheme.surface,
                                 ),
-                                  if (index != nodes.length - 1)
+                                  if (index != activePath.length - 1 || childrenByParent.containsKey(node.id))
                                   Container(
-                                    height: 50,
+                                    height: MediaQuery.of(context).size.height * 0.05,
                                     width: 2,
                                     color: AppTheme.cyanAccent.withValues(alpha: 0.3),
                                     margin: const EdgeInsets.only(top: 8),
@@ -192,9 +232,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             const SizedBox(width: 16),
                             // Text bubble
                             Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
                                   color: AppTheme.surface,
                                   borderRadius: const BorderRadius.only(
                                     topRight: Radius.circular(20),
@@ -260,22 +303,64 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                         ),
                                       ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  if (siblingCount > 1)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(Icons.chevron_left, color: currentIndex > 0 ? AppTheme.cyanAccent : AppTheme.textMuted.withValues(alpha: 0.3)),
+                                            onPressed: currentIndex > 0
+                                                ? () {
+                                                    setState(() {
+                                                      selectedSiblingIndex[mapKey] = currentIndex - 1;
+                                                      _computeActivePath();
+                                                    });
+                                                  }
+                                                : null,
+                                            visualDensity: VisualDensity.compact,
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.surface.withValues(alpha: 0.5),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              '${currentIndex + 1} of $siblingCount Timelines',
+                                              style: TextStyle(color: AppTheme.textMuted.withValues(alpha: 0.8), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: Icon(Icons.chevron_right, color: currentIndex < siblingCount - 1 ? AppTheme.cyanAccent : AppTheme.textMuted.withValues(alpha: 0.3)),
+                                            onPressed: currentIndex < siblingCount - 1
+                                                ? () {
+                                                    setState(() {
+                                                      selectedSiblingIndex[mapKey] = currentIndex + 1;
+                                                      _computeActivePath();
+                                                    });
+                                                  }
+                                                : null,
+                                            visualDensity: VisualDensity.compact,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       );
                     },
-                    childCount: nodes.length,
+                    childCount: activePath.length,
                   ),
                 ),
               ),
             ],
-          );
-        },
-      ),
+          ),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),

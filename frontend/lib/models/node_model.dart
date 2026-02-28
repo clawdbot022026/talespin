@@ -3,7 +3,7 @@ class NodeModel {
   final String content;
   final String authorName;
   final String authorAvatarUrl;
-  final int voteCount;
+  int voteCount;
   final String path;
   final String? parentId;
 
