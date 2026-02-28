@@ -5,6 +5,7 @@ import '../models/story.dart';
 import '../theme/app_theme.dart';
 import '../widgets/story_card.dart';
 import '../screens/reader_screen.dart';
+import '../screens/composer_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -124,7 +125,26 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () async {
+          final shouldRefresh = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ComposerScreen(),
+              fullscreenDialog: true,
+            ),
+          );
+
+          if (shouldRefresh == true) {
+            setState(() {
+              futureStories = fetchTrendingStories();
+            });
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('A new Multiverse was born.'), backgroundColor: AppTheme.cyanAccent),
+              );
+            }
+          }
+        },
         backgroundColor: AppTheme.magentaAccent,
         child: const Icon(Icons.edit, color: Colors.white),
       ),
