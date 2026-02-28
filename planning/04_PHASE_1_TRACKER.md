@@ -20,7 +20,8 @@ This document tracks the granular development status of TaleSpin Phase 1 (The Co
 | **API: Health Check** | ✅ Done | `GET /api/health` |
 | **API: Get Trending** | ✅ Done | `GET /api/stories/trending` (Live feed wired to DB). |
 | **API: Create Genesis** | ✅ Done | `POST /api/stories` (Handles cross-table atomic Node creation). |
-| **API: Branch/Continue** | ❌ Pending | `POST /api/nodes/:id/branch` (Requires path appending logic). |
+| **API: Branch/Continue** | ✅ Done | `POST /api/nodes/:id/branch` (Using PostgreSQL LTREE replacement for 0(1) graph insertions). |
+| **API: Get Story Graph** | ✅ Done | `GET /api/stories/:id/nodes` (Fetches entire graph in Pre-Order using LTREE). |
 | **API: Vote Node** | ❌ Pending | `POST /api/nodes/:id/vote` (Requires Redis buffering logic). |
 
 ---
