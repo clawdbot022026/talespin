@@ -81,3 +81,30 @@ func BranchNode(c *fiber.Ctx) error {
 		"node":    finalNode,
 	})
 }
+
+// VoteNode increments a high-speed Redis vote counter
+// URL: POST /api/nodes/:id/vote
+func VoteNode(c *fiber.Ctx) error {
+	nodeID := c.Params("id")
+	if nodeID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Node ID is required to vote"})
+	}
+
+	// In a complete Auth Phase, we would store UserID to prevent double-voting.
+	// For Phase 1 (Frictionless MVP): We allow anonymous burst voting!
+
+	redisKey := "node:vote:" + nodeID
+
+	// Increment the counter in Redis (Memory-Speed atomic operation)
+	newCount, err := database.RedisClient.Incr(database.Ctx, redisKey).Result()
+	if err != nil {
+		log.Println("Redis Incr error:", err)
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to lock in your vote due to temporal interference"})
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"success":        true,
+		"message":        "Vote cast in Quantum Buffer",
+		"buffered_votes": newCount,
+	})
+}

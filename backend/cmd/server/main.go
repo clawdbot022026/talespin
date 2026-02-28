@@ -8,12 +8,16 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/talespin/backend/internal/database"
 	"github.com/talespin/backend/internal/handlers"
+	"github.com/talespin/backend/internal/workers"
 )
 
 func main() {
 	// Initialize databases
 	database.ConnectDB()
 	database.ConnectRedis()
+
+	// Start Background Workers
+	workers.StartVoteFlusher()
 
 	app := fiber.New()
 	app.Use(logger.New())
@@ -34,6 +38,7 @@ func main() {
 
 	// TODO: Auth Routes
 	api.Post("/nodes/:id/branch", handlers.BranchNode)
+	api.Post("/nodes/:id/vote", handlers.VoteNode)
 
 	log.Fatal(app.Listen(":8080"))
 }

@@ -112,7 +112,7 @@ func GetStoryGraph(c *fiber.Ctx) error {
 	}
 
 	var nodes []models.Node
-	
+
 	// Because of LTREE, ordering by path gives us a perfect Pre-Order traversal of the Graph!
 	// We also preload the Author data so the UI can display who wrote each branch.
 	if err := database.DB.Where("story_id = ?", storyID).Preload("Author").Order("path ASC").Find(&nodes).Error; err != nil {

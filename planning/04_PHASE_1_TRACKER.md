@@ -22,7 +22,7 @@ This document tracks the granular development status of TaleSpin Phase 1 (The Co
 | **API: Create Genesis** | ✅ Done | `POST /api/stories` (Handles cross-table atomic Node creation). |
 | **API: Branch/Continue** | ✅ Done | `POST /api/nodes/:id/branch` (Using PostgreSQL LTREE replacement for 0(1) graph insertions). |
 | **API: Get Story Graph** | ✅ Done | `GET /api/stories/:id/nodes` (Fetches entire graph in Pre-Order using LTREE). |
-| **API: Vote Node** | ❌ Pending | `POST /api/nodes/:id/vote` (Requires Redis buffering logic). |
+| **API: Vote Node** | ✅ Done | `POST /api/nodes/:id/vote` (Redis memory-buffering deployed with async flush to Postgres). |
 
 ---
 
