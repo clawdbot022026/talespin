@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/story.dart';
 import '../models/node_model.dart';
 import '../theme/app_theme.dart';
+import '../screens/auth_screen.dart';
 
 class ReaderScreen extends StatefulWidget {
   final Story story;
@@ -109,10 +112,22 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   Future<void> _submitVote(String nodeId) async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (!auth.isAuthenticated) {
+      final success = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (c) => const AuthScreen(), fullscreenDialog: true),
+      );
+      if (success != true) return;
+    }
+
     try {
       final response = await http.post(
         Uri.parse('http://localhost:8080/api/nodes/$nodeId/vote'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${auth.token}'
+        },
       );
 
       final responseBody = jsonDecode(response.body);
@@ -136,6 +151,15 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   Future<void> _submitBranch() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (!auth.isAuthenticated) {
+      final success = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (c) => const AuthScreen(initialIsLogin: false), fullscreenDialog: true),
+      );
+      if (success != true) return;
+    }
+
     final text = _branchController.text.trim();
     if (text.isEmpty || selectedParentId == null) return;
 
@@ -151,7 +175,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
     try {
       final response = await http.post(
         Uri.parse('http://localhost:8080/api/nodes/$selectedParentId/branch'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${auth.token}'
+        },
         body: jsonEncode({'content': text}),
       );
 

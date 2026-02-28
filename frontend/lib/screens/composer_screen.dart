@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
 class ComposerScreen extends StatefulWidget {
@@ -53,9 +55,14 @@ class _ComposerScreenState extends State<ComposerScreen> {
     setState(() { _isSubmitting = true; });
 
     try {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+
       final response = await http.post(
         Uri.parse('http://localhost:8080/api/stories'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${auth.token}',
+        },
         body: jsonEncode({
           'title': title,
           'tags': tags,

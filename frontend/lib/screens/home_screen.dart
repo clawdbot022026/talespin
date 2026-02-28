@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/story.dart';
 import '../theme/app_theme.dart';
 import '../widgets/story_card.dart';
 import '../screens/reader_screen.dart';
 import '../screens/composer_screen.dart';
+import '../screens/auth_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -61,10 +64,35 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: AppTheme.surface,
-              radius: 16,
-              child: const Icon(Icons.person, size: 18, color: AppTheme.magentaAccent),
+            child: Consumer<AuthProvider>(
+              builder: (context, auth, _) {
+                return InkWell(
+                  onTap: () async {
+                    if (!auth.isAuthenticated) {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AuthScreen(initialIsLogin: true),
+                          fullscreenDialog: true,
+                        ),
+                      );
+                    } else {
+                      // Placeholder for Phase 2 User Profile Screen
+                      auth.logout(); // Temp: Tap to logout
+                    }
+                  },
+                  child: CircleAvatar(
+                    backgroundColor: AppTheme.surface,
+                    radius: 16,
+                    backgroundImage: auth.isAuthenticated && auth.user?.avatarUrl != null
+                        ? NetworkImage(auth.user!.avatarUrl)
+                        : null,
+                    child: !auth.isAuthenticated || auth.user?.avatarUrl == null
+                        ? const Icon(Icons.person, size: 18, color: AppTheme.magentaAccent)
+                        : null,
+                  ),
+                );
+              }
             ),
           ),
         ],
@@ -126,6 +154,21 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
+          final auth = Provider.of<AuthProvider>(context, listen: false);
+          
+          if (!auth.isAuthenticated) {
+             final didLogin = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AuthScreen(initialIsLogin: false),
+                  fullscreenDialog: true,
+                ),
+              );
+              if (didLogin != true) return;
+          }
+
+          if (!context.mounted) return;
+
           final shouldRefresh = await Navigator.push(
             context,
             MaterialPageRoute(
