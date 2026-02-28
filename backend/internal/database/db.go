@@ -30,4 +30,17 @@ func ConnectDB() {
 	} else {
 		log.Println("Database Migration completed")
 	}
+
+	// Seed Dummy User
+	var userCount int64
+	db.Model(&models.User{}).Count(&userCount)
+	if userCount == 0 {
+		dummyUser := models.User{
+			Username:  "UnknownDrifter",
+			Email:     "dummy@talespin.com",
+			AvatarURL: "https://api.dicebear.com/7.x/pixel-art/png?seed=Drifter",
+		}
+		db.Create(&dummyUser)
+		log.Println("Seeded Dummy User:", dummyUser.ID)
+	}
 }

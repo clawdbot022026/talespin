@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/talespin/backend/internal/database"
 	"github.com/talespin/backend/internal/handlers"
@@ -16,6 +17,10 @@ func main() {
 
 	app := fiber.New()
 	app.Use(logger.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowHeaders: "Origin, Content-Type, Accept",
+	}))
 
 	api := app.Group("/api")
 
@@ -24,6 +29,7 @@ func main() {
 	})
 
 	api.Get("/stories/trending", handlers.GetTrendingStories)
+	api.Post("/stories", handlers.CreateStory)
 
 	// TODO: Auth Routes
 	// TODO: Node Routes

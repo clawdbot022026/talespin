@@ -1,10 +1,42 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../models/story.dart';
 import '../theme/app_theme.dart';
 import '../widgets/story_card.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late Future<List<Story>> futureStories;
+
+  @override
+  void initState() {
+    super.initState();
+    futureStories = fetchTrendingStories();
+  }
+
+  Future<List<Story>> fetchTrendingStories() async {
+    // Assuming the Go backend is running locally
+    final response = await http.get(Uri.parse('http://localhost:8080/api/stories/trending'));
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      if (jsonResponse['success']) {
+        final List<dynamic> data = jsonResponse['data'];
+        return data.map((json) => Story.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load multiverses: ${jsonResponse['message']}');
+      }
+    } else {
+      throw Exception('Failed to connect to the Multiverse Engine');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,21 +79,50 @@ class HomeScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 20),
-              ...mockTrendingStories.map((story) => StoryCard(
-                    story: story,
-                    onTap: () {
-                      // Navigate to Reader in next iteration
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          backgroundColor: AppTheme.surface,
-                          content: Text(
-                            'Entering ${story.title}...',
-                            style: const TextStyle(color: AppTheme.cyanAccent),
-                          ),
-                        ),
-                      );
-                    },
-                  )),
+              FutureBuilder<List<Story>>(
+                future: futureStories,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(50.0),
+                        child: CircularProgressIndicator(color: AppTheme.cyanAccent),
+                      ),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        'Error: \${snapshot.error}',
+                        style: const TextStyle(color: AppTheme.magentaAccent),
+                      ),
+                    );
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No multiverses found. Be the first to start one!',
+                        style: TextStyle(color: AppTheme.textMuted),
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: snapshot.data!.map((story) => StoryCard(
+                          story: story,
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: AppTheme.surface,
+                                content: Text(
+                                  'Entering \${story.title}...',
+                                  style: const TextStyle(color: AppTheme.cyanAccent),
+                                ),
+                              ),
+                            );
+                          },
+                        )).toList(),
+                  );
+                },
+              ),
             ],
           ),
         ),

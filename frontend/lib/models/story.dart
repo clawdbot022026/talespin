@@ -16,6 +16,18 @@ class Story {
     required this.totalNodes,
     required this.weeklyVoteVelocity,
   });
+
+  factory Story.fromJson(Map<String, dynamic> json) {
+    return Story(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      authorName: json['authorName'] as String,
+      authorAvatarUrl: json['authorAvatarUrl'] as String,
+      tags: (json['tags'] as String).split(',').map((e) => e.trim()).toList(),
+      totalNodes: json['totalNodes'] is int ? json['totalNodes'] as int : (json['totalNodes'] as double).toInt(),
+      weeklyVoteVelocity: json['weeklyVoteVelocity'] is double ? json['weeklyVoteVelocity'] as double : (json['weeklyVoteVelocity'] as int).toDouble(),
+    );
+  }
 }
 
 // Temporary Mock Data for Phase 1 Demo
