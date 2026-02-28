@@ -4,6 +4,8 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"github.com/talespin/backend/internal/auth"
 	"github.com/talespin/backend/internal/database"
 	"github.com/talespin/backend/internal/models"
 )
@@ -37,9 +39,16 @@ func BranchNode(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Original timeline point not found"})
 	}
 
-	// For MVP Phase 1: Fetch Dummy User
-	var dummyUser models.User
-	database.DB.First(&dummyUser)
+	// Fetch User from JWT Identity
+	userIDStr, err := auth.ExtractUserID(c)
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized voyager"})
+	}
+
+	authorID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Corrupted voyager ID"})
+	}
 
 	tx := database.DB.Begin()
 
@@ -48,7 +57,7 @@ func BranchNode(c *fiber.Ctx) error {
 		StoryID:  parentNode.StoryID,
 		ParentID: &parentNode.ID,
 		Content:  req.Content,
-		AuthorID: dummyUser.ID,
+		AuthorID: authorID,
 	}
 
 	// We must save the record first so GORM generates the uuid PK for us.
@@ -90,8 +99,14 @@ func VoteNode(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Node ID is required to vote"})
 	}
 
-	// In a complete Auth Phase, we would store UserID to prevent double-voting.
-	// For Phase 1 (Frictionless MVP): We allow anonymous burst voting!
+	// Fetch User from JWT to ensure only authenticated users can vote
+	_, err := auth.ExtractUserID(c)
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{"error": "You must join the timeline to cast a vote."})
+	}
+
+	// For Phase 2 (WIP Frictionless Scaling): We allow anonymous burst voting from logged-in users
+	// until we implement voter_id tracking arrays in redis for true 1:1 voting verification.
 
 	redisKey := "node:vote:" + nodeID
 

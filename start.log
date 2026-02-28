@@ -16,19 +16,11 @@ ALTER ROLE
 Making sure the Postgres Database exists...
    Database already exists or the command failed.
 Starting Backend API (Golang)...
-2026/03/01 00:07:26 Connected to PostgreSQL
-2026/03/01 00:07:26 Database Migration completed
-2026/03/01 00:07:26 Connected to Redis
-
- ┌───────────────────────────────────────────────────┐ 
- │                  Fiber v2.52.12                   │ 
- │               http://127.0.0.1:8080               │ 
- │       (bound on host 0.0.0.0 and port 8080)       │ 
- │                                                   │ 
- │ Handlers ............ 10  Processes ........... 1 │ 
- │ Prefork ....... Disabled  PID ............. 60355 │ 
- └───────────────────────────────────────────────────┘ 
-
+2026/03/01 00:27:58 Connected to PostgreSQL
+2026/03/01 00:27:58 Database Migration completed
+2026/03/01 00:27:58 Connected to Redis
+2026/03/01 00:27:58 failed to listen: listen tcp4 :8080: bind: address already in use
+exit status 1
 Starting Frontend UI (Flutter Web)...
 Resolving dependencies...
 Downloading packages...
@@ -47,18 +39,31 @@ Got dependencies!
 3 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
 Launching lib/main.dart on Chrome in debug mode...
-Waiting for connection from debug service on Chrome...              9.4s
-
-Flutter run key commands.
-r Hot reload. 🔥🔥🔥
-R Hot restart.
-h List all available interactive commands.
-d Detach (terminate "flutter run" but leave application running).
-c Clear the screen
-q Quit (terminate the application on the device).
-
-Debug service listening on ws://127.0.0.1:55995/9tBZIeXj2Q4=/ws
-A Dart VM Service on Chrome is available at: http://127.0.0.1:55995/9tBZIeXj2Q4=
-The Flutter DevTools debugger and profiler on Chrome is available at: http://127.0.0.1:55995/9tBZIeXj2Q4=/devtools/?uri=ws://127.0.0.1:55995/9tBZIeXj2Q4=/ws
-Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.
-00:07:42 | 200 |    1.591792ms | 127.0.0.1 | GET | /api/stories/trending | -
+Waiting for connection from debug service on Chrome...          
+lib/screens/reader_screen.dart:251:45: Error: Can't find ']' to match '['.
+                                  children: [
+                                            ^
+lib/screens/reader_screen.dart:238:44: Error: Can't find ')' to match '('.
+                                  Container(
+                                           ^
+lib/screens/reader_screen.dart:107:69: Error: The getter 'e' isn't defined for the type '_ReaderScreenState'.
+ - '_ReaderScreenState' is from 'package:talespin/screens/reader_screen.dart' ('lib/screens/reader_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'e'.
+      throw Exception('Failed to connect to the Multiverse Engine: $e');
+                                                                    ^
+lib/screens/reader_screen.dart:307:35: Error: Expected an identifier, but got 'if'.
+Try inserting an identifier before 'if'.
+                                  if (siblingCount > 1)
+                                  ^^
+lib/screens/reader_screen.dart:238:44: Error: Too many positional arguments: 0 allowed, but 1 found.
+Try removing the extra positional arguments.
+                                  Container(
+                                           ^
+/opt/homebrew/share/flutter/packages/flutter/lib/src/widgets/container.dart:255:3: Context: Found this candidate, but the arguments don't match.
+  Container({
+  ^^^^^^^^^
+lib/screens/reader_screen.dart:307:35: Error: Expected ',' before this.
+                                  if (siblingCount > 1)
+                                  ^^
+Waiting for connection from debug service on Chrome...              9.5s
+Failed to compile application.

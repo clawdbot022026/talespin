@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/talespin/backend/internal/auth"
 	"github.com/talespin/backend/internal/database"
 	"github.com/talespin/backend/internal/handlers"
 	"github.com/talespin/backend/internal/workers"
@@ -33,12 +34,19 @@ func main() {
 	})
 
 	api.Get("/stories/trending", handlers.GetTrendingStories)
-	api.Post("/stories", handlers.CreateStory)
-	api.Get("/stories/:id/nodes", handlers.GetStoryGraph)
+	// Auth Routes (Public)
+	authGroup := api.Group("/auth")
+	authGroup.Post("/register", handlers.Register)
+	authGroup.Post("/login", handlers.Login)
 
-	// TODO: Auth Routes
-	api.Post("/nodes/:id/branch", handlers.BranchNode)
-	api.Post("/nodes/:id/vote", handlers.VoteNode)
+	// Protected Routes (Require JWT)
+	protected := api.Group("/")
+	protected.Use(auth.Protected())
+
+	protected.Get("/me", handlers.GetProfile)
+	protected.Post("/stories", handlers.CreateStory)
+	protected.Post("/nodes/:id/branch", handlers.BranchNode)
+	protected.Post("/nodes/:id/vote", handlers.VoteNode)
 
 	log.Fatal(app.Listen(":8080"))
 }

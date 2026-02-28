@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"github.com/talespin/backend/internal/auth"
 	"github.com/talespin/backend/internal/database"
 	"github.com/talespin/backend/internal/models"
 )
@@ -55,18 +57,23 @@ func CreateStory(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Constraints violation: Title >= 3, Content between 50-280 characters"})
 	}
 
-	// For MVP Phase 1 (Before Authentication), query the dummy user
-	var dummyUser models.User
-	database.DB.First(&dummyUser)
+	// Extract Author from JWT
+	userIDStr, err := auth.ExtractUserID(c)
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized voyager"})
+	}
 
-	// Transaction to create both Story and initial Node
+	authorID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Corrupted voyager ID"})
+	}
 	tx := database.DB.Begin()
 
 	// 1. Create Story Meta
 	story := models.Story{
 		Title:    req.Title,
 		Tags:     req.Tags,
-		AuthorID: dummyUser.ID,
+		AuthorID: authorID,
 	}
 	if err := tx.Create(&story).Error; err != nil {
 		tx.Rollback()
@@ -77,7 +84,7 @@ func CreateStory(c *fiber.Ctx) error {
 	node := models.Node{
 		StoryID:  story.ID,
 		Content:  req.Content,
-		AuthorID: dummyUser.ID,
+		AuthorID: authorID,
 	}
 
 	// Save note first to retrieve its auto-generated UUID

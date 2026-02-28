@@ -104,7 +104,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         throw Exception('Failed to load nodes: ${jsonResponse['message']}');
       }
     } else {
-      throw Exception('Failed to connect to the Multiverse Engine: $e');
+      throw Exception('Failed to connect to the Multiverse Engine');
     }
   }
 
@@ -303,9 +303,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  if (siblingCount > 1)
-                                    Padding(
+                                  ],
+                                ),
+                              ),
+                              if (siblingCount > 1)
+                                Padding(
                                       padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.center,
