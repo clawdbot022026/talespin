@@ -32,8 +32,14 @@ echo ""
 
 # 2. Check Database Service Status (macOS Homebrew)
 echo "Ensuring Databases are active via Homebrew services..."
-brew services start postgresql 2>/dev/null
+brew services start postgresql@14 2>/dev/null
 brew services start redis 2>/dev/null
+
+sleep 2 # Wait for postgres to start
+
+# Ensure postgres user exists
+/opt/homebrew/opt/postgresql@14/bin/createuser -s postgres 2>/dev/null
+/opt/homebrew/opt/postgresql@14/bin/psql -U postgres -d postgres -c "ALTER USER postgres PASSWORD 'postgres';" 2>/dev/null
 
 # 3. Create the Database if it doesn't already exist
 echo "Making sure the Postgres Database exists..."
