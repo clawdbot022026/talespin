@@ -28,7 +28,7 @@ This document tracks the granular development status of TaleSpin Phase 1 (The Co
 
 ## 🔵 2. Frontend UI/UX (Flutter)
 
-**Status:** Awaiting Initialization
+**Status:** In Progress (Core Screens Built)
 **Location:** `/frontend`
 
 ### The "Deep Space / Neon" Aesthetic Mandate
@@ -44,10 +44,10 @@ TaleSpin must feel like a premium, frictionless, collaborative artifact.
 
 #### 1. The Global Feed (Home Screen)
 **Mobile Layout:**
-*   **Top Bar:** "TaleSpin" neon logo (Left). Search Icon & Profile Avatar (Right).
-*   **Content:** A vertical list of large Story Cards.
-*   **Story Card Design:** Uses 90% of screen width. Contains: Title, Genesis Author Avatar, 3 Tags (e.g. `sci-fi`), Total Nodes/Length, and a "Trending" sparkline graph visualizing recent vote activity.
-*   **Action:** Tapping anywhere heavily presses the card inwards (haptic feedback) and opens the Reader.
+*   ✅ **Top Bar:** "TaleSpin" neon logo (Left). Search Icon & Profile Avatar (Right).
+*   ✅ **Content:** A vertical list of large Story Cards.
+*   ✅ **Story Card Design:** Uses 90% of screen width. Contains: Title, Genesis Author Avatar, 3 Tags (e.g. `sci-fi`), Total Nodes/Length, and a "Trending" sparkline graph visualizing recent vote activity.
+*   ✅ **Action:** Tapping anywhere heavily presses the card inwards (haptic feedback) and opens the Reader.
 
 **Tablet/Desktop Layout:**
 *   **Left Sidebar:** Navigation (Home, My Library, Notifications) fixed.
@@ -56,13 +56,13 @@ TaleSpin must feel like a premium, frictionless, collaborative artifact.
 #### 2. The Engine Room (Reader / Branching view)
 **Mobile Layout:**
 *   **The Breadcrumb Header (Top 10%):** A horizontally scrolling list of tiny dots or the first word of previous nodes. Shows context.
-*   **The Main Node (Center 50%):** The current text block (up to 280 chars) styled beautifully. Large text, highly readable.
+*   ✅ **The Main Node (Center 50%):** The current text block (up to 280 chars) styled beautifully. Large text, highly readable.
 *   **The Multiverse Indicator:** If this node has 3 children (branches), show a glowing "1 of 3 Timelines" indicator below the text.
     *   *Interaction:* Swipe Left/Right anywhere on the screen gently transitions to timeline 2 or 3.
-*   **The Action Bar (Bottom 20%):**
-    *   Floating Action Button (Large, Primary Color): **"Continue Story"**
-    *   Secondary Button (Outline): **"Branch Here"**
-    *   Upvote Button: Sparkles/glows when pressed.
+*   ✅ **The Action Bar (Bottom 20%):**
+    *   ✅ Floating Action Button (Large, Primary Color): **"Continue Story"** (Implemented as inline composer)
+    *   ✅ Secondary Button (Outline): **"Branch Here"**
+    *   ✅ Upvote Button: Sparkles/glows when pressed.
 
 **Tablet/Desktop Layout:**
 *   **Left Panel (30% width):** Shows a massive vertically scrolling thread of the entire prior history leading up to the current node.
