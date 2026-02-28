@@ -18,8 +18,8 @@ This document tracks the granular development status of TaleSpin Phase 1 (The Co
 | **Schema: `Story` Model** | ✅ Done | UUID, Title, Tags, Author FK (Genesis Node pointer). |
 | **Schema: `Node` Model** | ✅ Done | UUID, Story FK, Parent FK, Content (280 char max), VoteCount, Path (LTREE). |
 | **API: Health Check** | ✅ Done | `GET /api/health` |
-| **API: Get Trending** | 🚧 WIP | `GET /api/stories/trending` (Mock logic written, needs actual vote velocity query). |
-| **API: Create Genesis** | ❌ Pending | `POST /api/stories` |
+| **API: Get Trending** | ✅ Done | `GET /api/stories/trending` (Live feed wired to DB). |
+| **API: Create Genesis** | ✅ Done | `POST /api/stories` (Handles cross-table atomic Node creation). |
 | **API: Branch/Continue** | ❌ Pending | `POST /api/nodes/:id/branch` (Requires path appending logic). |
 | **API: Vote Node** | ❌ Pending | `POST /api/nodes/:id/vote` (Requires Redis buffering logic). |
 
