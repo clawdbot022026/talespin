@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/story.dart';
 import '../theme/app_theme.dart';
 import '../widgets/story_card.dart';
+import '../screens/reader_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -92,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   } else if (snapshot.hasError) {
                     return Center(
                       child: Text(
-                        'Error: \${snapshot.error}',
+                        'Error: ${snapshot.error}',
                         style: const TextStyle(color: AppTheme.magentaAccent),
                       ),
                     );
@@ -109,14 +110,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: snapshot.data!.map((story) => StoryCard(
                           story: story,
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: AppTheme.surface,
-                                content: Text(
-                                  'Entering \${story.title}...',
-                                  style: const TextStyle(color: AppTheme.cyanAccent),
-                                ),
-                              ),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ReaderScreen(story: story)),
                             );
                           },
                         )).toList(),

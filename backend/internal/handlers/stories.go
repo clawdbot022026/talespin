@@ -103,3 +103,24 @@ func CreateStory(c *fiber.Ctx) error {
 		"node":    genesisNode,
 	})
 }
+
+// GetStoryGraph fetches the entire multiverse graph for a single story instance
+func GetStoryGraph(c *fiber.Ctx) error {
+	storyID := c.Params("id")
+	if storyID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Story ID parameter is required"})
+	}
+
+	var nodes []models.Node
+	
+	// Because of LTREE, ordering by path gives us a perfect Pre-Order traversal of the Graph!
+	// We also preload the Author data so the UI can display who wrote each branch.
+	if err := database.DB.Where("story_id = ?", storyID).Preload("Author").Order("path ASC").Find(&nodes).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch multiverse tree"})
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"success": true,
+		"data":    nodes,
+	})
+}

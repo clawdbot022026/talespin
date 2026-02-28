@@ -30,9 +30,10 @@ func main() {
 
 	api.Get("/stories/trending", handlers.GetTrendingStories)
 	api.Post("/stories", handlers.CreateStory)
+	api.Get("/stories/:id/nodes", handlers.GetStoryGraph)
 
 	// TODO: Auth Routes
-	// TODO: Node Routes
+	api.Post("/nodes/:id/branch", handlers.BranchNode)
 
 	log.Fatal(app.Listen(":8080"))
 }
